@@ -12,15 +12,35 @@ class PiattiScreen extends StatelessWidget {
   });
 
   Future<void> _aggiungiOrdine(String piatto) async {
-    final ordiniRef = FirebaseFirestore.instance.collection("ordini");
+    final ordiniRef =
+    FirebaseFirestore.instance.collection("ordini").doc(tavoloNumero.toString());
 
-    await ordiniRef.add({
-      "tavolo": tavoloNumero,
-      "timestamp": DateTime.now().toIso8601String(),
-      "items": [
-        {"nome": piatto, "qty": 1}
-      ],
-    });
+    final snapshot = await ordiniRef.get();
+
+    if (snapshot.exists) {
+      final data = snapshot.data()!;
+      final items = List<Map<String, dynamic>>.from(data["items"]);
+      final index = items.indexWhere((item) => item["nome"] == piatto);
+
+      if (index != -1) {
+        items[index]["qty"] += 1;
+      } else {
+        items.add({"nome": piatto, "qty": 1});
+      }
+
+      await ordiniRef.update({
+        "items": items,
+        "timestamp": DateTime.now().toIso8601String(),
+      });
+    } else {
+      await ordiniRef.set({
+        "tavolo": tavoloNumero,
+        "timestamp": DateTime.now().toIso8601String(),
+        "items": [
+          {"nome": piatto, "qty": 1}
+        ],
+      });
+    }
   }
 
   @override
@@ -37,9 +57,7 @@ class PiattiScreen extends StatelessWidget {
     final piattiCategoria = piatti[categoriaNome] ?? [];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Tavolo $tavoloNumero - $categoriaNome"),
-      ),
+      appBar: AppBar(title: Text("Tavolo $tavoloNumero - $categoriaNome")),
       body: ListView.builder(
         itemCount: piattiCategoria.length,
         itemBuilder: (context, index) {

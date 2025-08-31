@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:sherwood_flutter/screens/ordini_screen.dart';
+import 'ordini_screen.dart';
 
 class SalaScreen extends StatelessWidget {
   const SalaScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Definizione tavoli divisi per sezione
     final Map<String, List<int>> sezioni = {
       'Interno': [1, 2, 3, 4, 5, 6],
       'Veranda': [11, 12, 13, 14],
@@ -53,7 +52,6 @@ class SalaScreen extends StatelessWidget {
                         ),
                       );
                     },
-
                     child: Text(
                       '$numero',
                       style: const TextStyle(
