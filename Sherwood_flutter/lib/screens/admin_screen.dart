@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
-import 'gestione_menu_screen.dart';
+import 'GestioneProdottiScreen.dart';
+import 'GestioneMenuScreen.dart';
+import 'GestioneCategorieScreen.dart';
+import 'GestioneFornitoriScreen.dart';
+import 'GestioneAcquistiScreen.dart';
+import 'GestioneTavoliScreen.dart';
 import 'statistiche_screen.dart';
 
 class AdminScreen extends StatelessWidget {
@@ -9,90 +12,36 @@ class AdminScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> menu = [
+      {"titolo": "Gestione Prodotti", "screen": const GestioneProdottiScreen()},
+      {"titolo": "Gestione Menù", "screen": const GestioneMenuScreen()},
+      {"titolo": "Gestione Categorie", "screen": const GestioneCategorieScreen()},
+      {"titolo": "Gestione Fornitori", "screen": const GestioneFornitoriScreen()},
+      {"titolo": "Gestione Acquisti", "screen": const GestioneAcquistiScreen()},
+      {"titolo": "Gestione Tavoli e Prenotazioni", "screen": const GestioneTavoliScreen()},
+      {"titolo": "Statistiche", "screen": const StatisticheScreen()},
+    ];
+
     return Scaffold(
       appBar: AppBar(title: const Text("Dashboard Admin")),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton(
+        child: ListView.separated(
+          itemCount: menu.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final item = menu[index];
+            return ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const GestioneMenuScreen()),
+                  MaterialPageRoute(builder: (_) => item["screen"]),
                 );
               },
-              child: const Text("🍽️ Gestione Menu"),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const StatisticheScreen()),
-                );
-              },
-              child: const Text("📊 Statistiche"),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const GestioneOrdiniScreen()),
-                );
-              },
-              child: const Text("📝 Gestione Ordini"),
-            ),
-          ],
+              child: Text(item["titolo"]),
+            );
+          },
         ),
-      ),
-    );
-  }
-}
-
-class GestioneOrdiniScreen extends StatelessWidget {
-  const GestioneOrdiniScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Admin - Ordini")),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection("ordini").snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final ordini = snapshot.data!.docs;
-
-          if (ordini.isEmpty) {
-            return const Center(child: Text("Nessun ordine presente"));
-          }
-
-          return ListView.builder(
-            itemCount: ordini.length,
-            itemBuilder: (context, index) {
-              final ordine = ordini[index].data() as Map<String, dynamic>;
-              final tavolo = ordine["tavolo"];
-              final items = List<Map<String, dynamic>>.from(ordine["items"]);
-
-              return Card(
-                child: ExpansionTile(
-                  title: Text("Tavolo $tavolo"),
-                  children: items
-                      .map((item) => ListTile(
-                    title: Text(item["nome"]),
-                    trailing: Text("x${item["qty"]}"),
-                  ))
-                      .toList(),
-                ),
-              );
-            },
-          );
-        },
       ),
     );
   }
