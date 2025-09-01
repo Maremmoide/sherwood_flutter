@@ -12,8 +12,9 @@ class PiattiScreen extends StatelessWidget {
   });
 
   Future<void> _aggiungiOrdine(String piatto) async {
-    final ordiniRef =
-    FirebaseFirestore.instance.collection("ordini").doc(tavoloNumero.toString());
+    final ordiniRef = FirebaseFirestore.instance
+        .collection("ordini")
+        .doc(tavoloNumero.toString());
 
     final snapshot = await ordiniRef.get();
 
@@ -23,23 +24,41 @@ class PiattiScreen extends StatelessWidget {
       final index = items.indexWhere((item) => item["nome"] == piatto);
 
       if (index != -1) {
+        // Se il piatto già esiste, aumento solo la quantità
         items[index]["qty"] += 1;
       } else {
-        items.add({"nome": piatto, "qty": 1});
+        // Se è un nuovo piatto, lo aggiungo con stato "In attesa"
+        items.add({"nome": piatto, "qty": 1, "stato": "In attesa"});
       }
 
+      // Aggiorno l'ordine su Firestore
       await ordiniRef.update({
         "items": items,
         "timestamp": DateTime.now().toIso8601String(),
+        "stato": _calcolaStatoOrdine(items),
       });
     } else {
+      // Se è il primo ordine per questo tavolo
       await ordiniRef.set({
         "tavolo": tavoloNumero,
         "timestamp": DateTime.now().toIso8601String(),
         "items": [
-          {"nome": piatto, "qty": 1}
+          {"nome": piatto, "qty": 1, "stato": "In attesa"}
         ],
+        "stato": "In attesa",
       });
+    }
+  }
+
+  /// Calcola lo stato complessivo dell'ordine in base agli item
+  String _calcolaStatoOrdine(List<Map<String, dynamic>> items) {
+    final stati = items.map((e) => e["stato"]).toList();
+    if (stati.every((s) => s == "In attesa")) {
+      return "In attesa";
+    } else if (stati.every((s) => s == "Pronto")) {
+      return "Pronto";
+    } else {
+      return "In preparazione";
     }
   }
 

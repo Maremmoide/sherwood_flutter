@@ -22,6 +22,7 @@ class OrdiniScreen extends StatelessWidget {
       appBar: AppBar(title: Text("Tavolo $tavoloNumero - Ordini")),
       body: Column(
         children: [
+          // 🔹 Lista categorie per aggiungere ordini
           Expanded(
             flex: 1,
             child: ListView.builder(
@@ -48,6 +49,10 @@ class OrdiniScreen extends StatelessWidget {
               },
             ),
           ),
+
+          const Divider(height: 1),
+
+          // 🔹 Ordini del tavolo in tempo reale
           Expanded(
             flex: 1,
             child: StreamBuilder<DocumentSnapshot>(
@@ -57,7 +62,8 @@ class OrdiniScreen extends StatelessWidget {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData || !snapshot.data!.exists) {
-                  return const Center(child: Text("Nessun ordine per questo tavolo"));
+                  return const Center(
+                      child: Text("Nessun ordine per questo tavolo"));
                 }
 
                 final data = snapshot.data!.data() as Map<String, dynamic>;
@@ -67,9 +73,12 @@ class OrdiniScreen extends StatelessWidget {
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final item = items[index];
-                    return ListTile(
-                      title: Text(item["nome"]),
-                      trailing: Text("x${item["qty"]}"),
+                    return Card(
+                      child: ListTile(
+                        title: Text(item["nome"]),
+                        subtitle: Text("Stato: ${item["stato"] ?? "In attesa"}"),
+                        trailing: Text("x${item["qty"]}"),
+                      ),
                     );
                   },
                 );
