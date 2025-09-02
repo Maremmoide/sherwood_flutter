@@ -16,42 +16,48 @@ class GestioneAcquistiScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text("Gestione Acquisti")),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: acquistiRef.snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const CircularProgressIndicator();
-                final acquisti = snapshot.data!.docs;
+      body: StreamBuilder<QuerySnapshot>(
+        stream: acquistiRef.snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData)
+            return const Center(child: CircularProgressIndicator());
+          final acquisti = snapshot.data!.docs;
 
-                return ListView.builder(
-                  itemCount: acquisti.length,
-                  itemBuilder: (context, index) {
-                    final a = acquisti[index];
-                    return ListTile(
-                      title: Text("${a["prodotto"]} - x${a["quantita"]}"),
-                      subtitle: Text("Fornitore: ${a["fornitoreNome"] ?? "N/A"} - €${a["costo"]}"),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => acquistiRef.doc(a.id).delete(),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          ElevatedButton(
-            child: const Text("Aggiungi Acquisto"),
-            onPressed: () {
-              prodotto = "";
-              quantita = 0;
-              costo = 0.0;
-              fornitoreId = "";
-              showDialog(
-                context: context,
-                builder: (_) => _dialogAcquisto(
+          if (acquisti.isEmpty) {
+            return const Center(child: Text("Nessun acquisto registrato"));
+          }
+
+          return ListView.builder(
+            itemCount: acquisti.length,
+            itemBuilder: (context, index) {
+              final a = acquisti[index];
+              return ListTile(
+                title: Text("${a["prodotto"]} - x${a["quantita"]}"),
+                subtitle: Text("Fornitore: ${a["fornitoreNome"] ??
+                    "N/A"} - €${a["costo"]}"),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () => acquistiRef.doc(a.id).delete(),
+                ),
+              );
+            },
+          );
+        },
+      ),
+
+      // 🔽 FAB al posto del bottone in fondo
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: const Text("Aggiungi Acquisto"),
+        onPressed: () {
+          prodotto = "";
+          quantita = 0;
+          costo = 0.0;
+          fornitoreId = "";
+          showDialog(
+            context: context,
+            builder: (_) =>
+                _dialogAcquisto(
                   context,
                   fornitoriRef,
                   prodotto,
@@ -69,38 +75,66 @@ class GestioneAcquistiScreen extends StatelessWidget {
                     });
                   },
                 ),
-              );
-            },
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  Widget _dialogAcquisto(
-      BuildContext context,
+  Widget _dialogAcquisto(BuildContext context,
       CollectionReference fornitoriRef,
       String prodotto,
       int quantita,
       double costo,
       String fornitoreId,
-      Function(String, int, double, String, String) onSave,
-      ) {
+      Function(String, int, double, String, String) onSave,) {
     String nuovoProdotto = prodotto;
     int nuovaQuantita = quantita;
     double nuovoCosto = costo;
     String nuovoFornitoreId = fornitoreId;
     String nuovoFornitoreNome = "";
 
+    final prodottiRef = FirebaseFirestore.instance.collection("prodotti");
+
     return AlertDialog(
       title: const Text("Nuovo Acquisto"),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextField(
-            decoration: const InputDecoration(labelText: "Prodotto"),
-            onChanged: (v) => nuovoProdotto = v,
+          // 🔹 Dropdown prodotti
+          StreamBuilder<QuerySnapshot>(
+            stream: prodottiRef.snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const CircularProgressIndicator();
+              final prodotti = snapshot.data!.docs;
+
+              return DropdownButton<String>(
+                value: nuovoProdotto.isNotEmpty ? nuovoProdotto : null,
+                hint: const Text("Seleziona Prodotto"),
+                isExpanded: true,
+                items: prodotti.map((p) {
+                  final nome = p["nome"] as String;
+                  final fId = p["fornitoreId"] as String;
+                  final fNome = p["fornitoreNome"] as String;
+
+                  return DropdownMenuItem<String>(
+                    value: nome,
+                    child: Text(nome),
+                    onTap: () {
+                      // Quando scelgo un prodotto, imposto fornitore automatico
+                      nuovoFornitoreId = fId;
+                      nuovoFornitoreNome = fNome;
+                    },
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  nuovoProdotto = val ?? "";
+                },
+              );
+
+            },
           ),
+
           TextField(
             decoration: const InputDecoration(labelText: "Quantità"),
             keyboardType: TextInputType.number,
@@ -112,37 +146,30 @@ class GestioneAcquistiScreen extends StatelessWidget {
             onChanged: (v) => nuovoCosto = double.tryParse(v) ?? 0.0,
           ),
           const SizedBox(height: 12),
-          StreamBuilder<QuerySnapshot>(
-            stream: fornitoriRef.snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const CircularProgressIndicator();
-              final fornitori = snapshot.data!.docs;
 
-              return DropdownButton<String>(
-                value: nuovoFornitoreId.isNotEmpty ? nuovoFornitoreId : null,
-                hint: const Text("Seleziona Fornitore"),
-                isExpanded: true,
-                items: fornitori.map((f) {
-                  return DropdownMenuItem(
-                    value: f.id,
-                    child: Text(f["nome"]),
-                    onTap: () => nuovoFornitoreNome = f["nome"],
-                  );
-                }).toList(),
-                onChanged: (val) {
-                  nuovoFornitoreId = val ?? "";
-                },
-              );
-            },
+          // 🔹 Fornitore mostrato ma non modificabile
+          TextField(
+            decoration: const InputDecoration(labelText: "Fornitore"),
+            controller: TextEditingController(text: nuovoFornitoreNome),
+            enabled: false, // non modificabile
           ),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annulla")),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Annulla"),
+        ),
         ElevatedButton(
           onPressed: () {
             if (nuovoProdotto.isNotEmpty && nuovoFornitoreId.isNotEmpty) {
-              onSave(nuovoProdotto, nuovaQuantita, nuovoCosto, nuovoFornitoreId, nuovoFornitoreNome);
+              onSave(
+                nuovoProdotto,
+                nuovaQuantita,
+                nuovoCosto,
+                nuovoFornitoreId,
+                nuovoFornitoreNome,
+              );
             }
             Navigator.pop(context);
           },

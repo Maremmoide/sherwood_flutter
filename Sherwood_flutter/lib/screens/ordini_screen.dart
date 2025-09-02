@@ -9,42 +9,52 @@ class OrdiniScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categorie = [
-      {"id": 1, "nome": "Antipasti"},
-      {"id": 2, "nome": "Primi"},
-      {"id": 3, "nome": "Secondi"},
-      {"id": 4, "nome": "Pizze"},
-      {"id": 5, "nome": "Dolci"},
-      {"id": 6, "nome": "Bevande"},
-    ];
+    final categorieRef = FirebaseFirestore.instance.collection("categorie");
 
     return Scaffold(
       appBar: AppBar(title: Text("Tavolo $tavoloNumero - Ordini")),
       body: Column(
         children: [
-          // 🔹 Lista categorie per aggiungere ordini
+          // 🔹 Lista categorie lette da Firestore
           Expanded(
             flex: 1,
-            child: ListView.builder(
-              itemCount: categorie.length,
-              itemBuilder: (context, index) {
-                final categoria = categorie[index];
-                return Card(
-                  child: ListTile(
-                    title: Text(categoria["nome"].toString()),
-                    trailing: const Icon(Icons.arrow_forward),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PiattiScreen(
-                            tavoloNumero: tavoloNumero,
-                            categoriaNome: categoria["nome"].toString(),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: categorieRef.snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final categorieDocs = snapshot.data!.docs;
+
+                if (categorieDocs.isEmpty) {
+                  return const Center(child: Text("Nessuna categoria disponibile"));
+                }
+
+                return ListView.builder(
+                  itemCount: categorieDocs.length,
+                  itemBuilder: (context, index) {
+                    final data = categorieDocs[index].data() as Map<String, dynamic>;
+                    final nome = data["nome"] ?? "Senza nome";
+
+                    return Card(
+                      child: ListTile(
+                        title: Text(nome),
+                        trailing: const Icon(Icons.arrow_forward),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PiattiScreen(
+                                tavoloNumero: tavoloNumero,
+                                categoriaNome: nome,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
                 );
               },
             ),

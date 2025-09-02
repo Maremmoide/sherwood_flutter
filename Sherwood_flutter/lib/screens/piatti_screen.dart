@@ -11,7 +11,7 @@ class PiattiScreen extends StatelessWidget {
     required this.categoriaNome,
   });
 
-  Future<void> _aggiungiOrdine(String piatto) async {
+  Future<void> _aggiungiOrdine(String piatto, double prezzo) async {
     final ordiniRef = FirebaseFirestore.instance
         .collection("ordini")
         .doc(tavoloNumero.toString());
@@ -24,33 +24,33 @@ class PiattiScreen extends StatelessWidget {
       final index = items.indexWhere((item) => item["nome"] == piatto);
 
       if (index != -1) {
-        // Se il piatto già esiste, aumento solo la quantità
         items[index]["qty"] += 1;
       } else {
-        // Se è un nuovo piatto, lo aggiungo con stato "In attesa"
-        items.add({"nome": piatto, "qty": 1, "stato": "In attesa"});
+        items.add({
+          "nome": piatto,
+          "qty": 1,
+          "prezzo": prezzo,
+          "stato": "In attesa"
+        });
       }
 
-      // Aggiorno l'ordine su Firestore
       await ordiniRef.update({
         "items": items,
         "timestamp": DateTime.now().toIso8601String(),
         "stato": _calcolaStatoOrdine(items),
       });
     } else {
-      // Se è il primo ordine per questo tavolo
       await ordiniRef.set({
         "tavolo": tavoloNumero,
         "timestamp": DateTime.now().toIso8601String(),
         "items": [
-          {"nome": piatto, "qty": 1, "stato": "In attesa"}
+          {"nome": piatto, "qty": 1, "prezzo": prezzo, "stato": "In attesa"}
         ],
         "stato": "In attesa",
       });
     }
   }
 
-  /// Calcola lo stato complessivo dell'ordine in base agli item
   String _calcolaStatoOrdine(List<Map<String, dynamic>> items) {
     final stati = items.map((e) => e["stato"]).toList();
     if (stati.every((s) => s == "In attesa")) {
@@ -64,34 +64,46 @@ class PiattiScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final piatti = {
-      "Antipasti": ["Bruschette", "Tagliere misto", "Olive ascolane"],
-      "Primi": ["Carbonara", "Lasagna", "Gnocchi al sugo"],
-      "Secondi": ["Tagliata di manzo", "Pollo arrosto", "Fritto misto"],
-      "Pizze": ["Margherita", "Diavola", "Quattro formaggi"],
-      "Dolci": ["Tiramisù", "Panna cotta", "Cheesecake"],
-      "Bevande": ["Acqua", "Coca Cola", "Birra artigianale"],
-    };
-
-    final piattiCategoria = piatti[categoriaNome] ?? [];
+    final piattiRef = FirebaseFirestore.instance
+        .collection("menu")
+        .where("categoriaNome", isEqualTo: categoriaNome);
 
     return Scaffold(
       appBar: AppBar(title: Text("Tavolo $tavoloNumero - $categoriaNome")),
-      body: ListView.builder(
-        itemCount: piattiCategoria.length,
-        itemBuilder: (context, index) {
-          final piatto = piattiCategoria[index];
-          return Card(
-            child: ListTile(
-              title: Text(piatto),
-              trailing: const Icon(Icons.add),
-              onTap: () async {
-                await _aggiungiOrdine(piatto);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("$piatto aggiunto all’ordine")),
-                );
-              },
-            ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: piattiRef.snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final piattiDocs = snapshot.data!.docs;
+
+          if (piattiDocs.isEmpty) {
+            return const Center(child: Text("Nessun piatto disponibile"));
+          }
+
+          return ListView.builder(
+            itemCount: piattiDocs.length,
+            itemBuilder: (context, index) {
+              final data = piattiDocs[index].data() as Map<String, dynamic>;
+              final nome = data["nome"] ?? "Senza nome";
+              final prezzo = (data["prezzo"] ?? 0).toDouble();
+
+              return Card(
+                child: ListTile(
+                  title: Text(nome),
+                  subtitle: Text("€${prezzo.toStringAsFixed(2)}"),
+                  trailing: const Icon(Icons.add),
+                  onTap: () async {
+                    await _aggiungiOrdine(nome, prezzo);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("$nome aggiunto all’ordine")),
+                    );
+                  },
+                ),
+              );
+            },
           );
         },
       ),

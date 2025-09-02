@@ -51,6 +51,7 @@ class _StatisticheScreenState extends State<StatisticheScreen> {
             ),
           ),
 
+          // 🔹 Contenuto principale
           Expanded(
             child: FutureBuilder<QuerySnapshot>(
               future: ordiniRef.get(),
@@ -164,22 +165,44 @@ class _StatisticheScreenState extends State<StatisticheScreen> {
                         }).toList(),
                       ),
                     ),
-
-                    // 🔹 Totale incasso
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        "💰 Incasso totale: €${totaleIncasso.toStringAsFixed(2)}",
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                    ),
                   ],
                 );
               },
             ),
           ),
         ],
+      ),
+
+      // 🔹 Totale incasso spostato sopra i tasti del telefono
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          color: Colors.white,
+          padding: const EdgeInsets.all(16),
+          child: FutureBuilder<QuerySnapshot>(
+            future: ordiniRef.get(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox();
+              double totaleIncasso = 0;
+              for (var ordine in snapshot.data!.docs) {
+                final data = ordine.data() as Map<String, dynamic>;
+                final items = List<Map<String, dynamic>>.from(data["items"]);
+                for (var item in items) {
+                  final qty = (item["qty"] ?? 0) as int;
+                  final prezzo = (item["prezzo"] ?? 0).toDouble();
+                  totaleIncasso += prezzo * qty;
+                }
+              }
+              return Text(
+                "💰 Incasso totale: €${totaleIncasso.toStringAsFixed(2)}",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }

@@ -9,82 +9,81 @@ class GestioneTavoliScreen extends StatelessWidget {
     final tavoliRef = FirebaseFirestore.instance.collection("tavoli");
     final prenotazioniRef = FirebaseFirestore.instance.collection("prenotazioni");
 
-    String nomeTavolo = "";
-
     return Scaffold(
       appBar: AppBar(title: const Text("Gestione Tavoli e Prenotazioni")),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: tavoliRef.snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const CircularProgressIndicator();
-                final tavoli = snapshot.data!.docs;
+      body: StreamBuilder<QuerySnapshot>(
+        stream: tavoliRef.snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+          final tavoli = snapshot.data!.docs;
 
-                return ListView.builder(
-                  itemCount: tavoli.length,
-                  itemBuilder: (context, index) {
-                    final t = tavoli[index];
-                    return Card(
-                      child: ExpansionTile(
-                        title: Text("Tavolo: ${t["nome"]}"),
-                        children: [
-                          StreamBuilder<QuerySnapshot>(
-                            stream: prenotazioniRef.where("tavoloId", isEqualTo: t.id).snapshots(),
-                            builder: (context, snapshotPren) {
-                              if (!snapshotPren.hasData) return const CircularProgressIndicator();
-                              final prenotazioni = snapshotPren.data!.docs;
+          if (tavoli.isEmpty) {
+            return const Center(child: Text("Nessun tavolo disponibile"));
+          }
 
-                              if (prenotazioni.isEmpty) {
-                                return const ListTile(title: Text("Nessuna prenotazione"));
-                              }
+          return ListView.builder(
+            itemCount: tavoli.length,
+            itemBuilder: (context, index) {
+              final t = tavoli[index];
+              return Card(
+                child: ExpansionTile(
+                  title: Text("Tavolo: ${t["nome"]}"),
+                  children: [
+                    StreamBuilder<QuerySnapshot>(
+                      stream: prenotazioniRef.where("tavoloId", isEqualTo: t.id).snapshots(),
+                      builder: (context, snapshotPren) {
+                        if (!snapshotPren.hasData) return const CircularProgressIndicator();
+                        final prenotazioni = snapshotPren.data!.docs;
 
-                              return Column(
-                                children: prenotazioni.map((p) {
-                                  return ListTile(
-                                    title: Text("Prenotazione: ${p["cliente"]}"),
-                                    subtitle: Text("Data: ${p["data"]}"),
-                                    trailing: IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () => prenotazioniRef.doc(p.id).delete(),
-                                    ),
-                                  );
-                                }).toList(),
-                              );
-                            },
+                        if (prenotazioni.isEmpty) {
+                          return const ListTile(title: Text("Nessuna prenotazione"));
+                        }
+
+                        return Column(
+                          children: prenotazioni.map((p) {
+                            return ListTile(
+                              title: Text("Prenotazione: ${p["cliente"]}"),
+                              subtitle: Text("Data: ${p["data"]}"),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () => prenotazioniRef.doc(p.id).delete(),
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                    TextButton(
+                      child: const Text("➕ Aggiungi Prenotazione"),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => _dialogPrenotazione(
+                            context,
+                            prenotazioniRef,
+                            t.id,
                           ),
-                          TextButton(
-                            child: const Text("➕ Aggiungi Prenotazione"),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (_) => _dialogPrenotazione(
-                                  context,
-                                  prenotazioniRef,
-                                  t.id,
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          ElevatedButton(
-            child: const Text("Aggiungi Tavolo"),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => _dialogTavolo(context, tavoliRef),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               );
             },
-          ),
-        ],
+          );
+        },
+      ),
+
+      // 🔽 FAB per aggiungere tavolo
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: const Text("Aggiungi Tavolo"),
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (_) => _dialogTavolo(context, tavoliRef),
+          );
+        },
       ),
     );
   }
@@ -112,7 +111,11 @@ class GestioneTavoliScreen extends StatelessWidget {
     );
   }
 
-  Widget _dialogPrenotazione(BuildContext context, CollectionReference prenotazioniRef, String tavoloId) {
+  Widget _dialogPrenotazione(
+      BuildContext context,
+      CollectionReference prenotazioniRef,
+      String tavoloId,
+      ) {
     String cliente = "";
     String data = "";
     return AlertDialog(
