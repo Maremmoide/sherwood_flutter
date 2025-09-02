@@ -45,7 +45,7 @@ class GestioneAcquistiScreen extends StatelessWidget {
         },
       ),
 
-      // 🔽 FAB al posto del bottone in fondo
+      // FAB al posto del bottone in fondo
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text("Aggiungi Acquisto"),
@@ -101,7 +101,7 @@ class GestioneAcquistiScreen extends StatelessWidget {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 🔹 Dropdown prodotti
+          // Dropdown prodotti
           StreamBuilder<QuerySnapshot>(
             stream: prodottiRef.snapshots(),
             builder: (context, snapshot) {
@@ -147,7 +147,7 @@ class GestioneAcquistiScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // 🔹 Fornitore mostrato ma non modificabile
+          // Fornitore mostrato ma non modificabile
           TextField(
             decoration: const InputDecoration(labelText: "Fornitore"),
             controller: TextEditingController(text: nuovoFornitoreNome),

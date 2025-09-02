@@ -16,7 +16,7 @@ class GestioneMenuScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Gestione Menù")),
 
-      // 🔹 Lista piatti del menù in tempo reale
+      // Lista piatti del menù in tempo reale
       body: StreamBuilder<QuerySnapshot>(
         stream: menuRef.snapshots(),
         builder: (context, snapshot) {
@@ -39,7 +39,7 @@ class GestioneMenuScreen extends StatelessWidget {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // 🔹 Modifica piatto
+                    // Modifica piatto
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () {
@@ -69,7 +69,7 @@ class GestioneMenuScreen extends StatelessWidget {
                         );
                       },
                     ),
-                    // 🔹 Elimina piatto
+                    // Elimina piatto
                     IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () => menuRef.doc(p.id).delete(),
@@ -82,7 +82,7 @@ class GestioneMenuScreen extends StatelessWidget {
         },
       ),
 
-      // 🔹 Pulsante per aggiungere nuovo piatto
+      // Pulsante per aggiungere nuovo piatto
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text("Aggiungi Piatto"),
@@ -114,7 +114,7 @@ class GestioneMenuScreen extends StatelessWidget {
     );
   }
 
-  /// 🔹 Dialog per aggiungere o modificare un piatto
+  /// Dialog per aggiungere o modificare un piatto
   Widget _dialogMenu(
       BuildContext context,
       CollectionReference categorieRef,
@@ -134,14 +134,14 @@ class GestioneMenuScreen extends StatelessWidget {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 🔹 Campo testo per il nome
+          // Campo testo per il nome
           TextField(
             decoration: const InputDecoration(labelText: "Nome"),
             controller: TextEditingController(text: nome),
             onChanged: (v) => nuovoNome = v,
           ),
 
-          // 🔹 Campo testo per il prezzo
+          // Campo testo per il prezzo
           TextField(
             decoration: const InputDecoration(labelText: "Prezzo"),
             keyboardType: TextInputType.number,
@@ -152,7 +152,7 @@ class GestioneMenuScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // 🔹 Dropdown categorie
+          // Dropdown categorie
           StreamBuilder<QuerySnapshot>(
             stream: categorieRef.snapshots(),
             builder: (context, snapshot) {
@@ -160,7 +160,7 @@ class GestioneMenuScreen extends StatelessWidget {
               final categorie = snapshot.data!.docs;
 
               return DropdownButton<String>(
-                // 🔹 Se ho già una categoria, la preseleziono
+                // Se ho già una categoria, la preseleziono
                 value: nuovaCategoriaId.isNotEmpty ? nuovaCategoriaId : null,
                 hint: const Text("Seleziona Categoria"),
                 isExpanded: true,
@@ -186,7 +186,7 @@ class GestioneMenuScreen extends StatelessWidget {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annulla")),
         ElevatedButton(
           onPressed: () {
-            // 🔹 Se non cambio nulla, rimane la categoria vecchia
+            // Se non cambio nulla, rimane la categoria vecchia
             if (nuovoNome.isNotEmpty && nuovaCategoriaId.isNotEmpty) {
               onSave(nuovoNome, nuovoPrezzo, nuovaCategoriaId, nuovaCategoriaNome);
             }

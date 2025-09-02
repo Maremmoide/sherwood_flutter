@@ -15,7 +15,7 @@ class GestioneProdottiScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text("Gestione Prodotti")),
 
-      // 🔹 Lista prodotti in tempo reale
+      // Lista prodotti in tempo reale
       body: StreamBuilder<QuerySnapshot>(
         stream: prodottiRef.snapshots(),
         builder: (context, snapshot) {
@@ -36,7 +36,7 @@ class GestioneProdottiScreen extends StatelessWidget {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // 🔹 Modifica prodotto
+                    // Modifica prodotto
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () {
@@ -62,7 +62,7 @@ class GestioneProdottiScreen extends StatelessWidget {
                         );
                       },
                     ),
-                    // 🔹 Elimina prodotto
+                    // Elimina prodotto
                     IconButton(
                       icon: const Icon(Icons.delete),
                       onPressed: () => prodottiRef.doc(p.id).delete(),
@@ -75,7 +75,7 @@ class GestioneProdottiScreen extends StatelessWidget {
         },
       ),
 
-      // 🔹 Pulsante per aggiungere nuovo prodotto
+      // Pulsante per aggiungere nuovo prodotto
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text("Aggiungi Prodotto"),
@@ -104,7 +104,7 @@ class GestioneProdottiScreen extends StatelessWidget {
     );
   }
 
-  /// 🔹 Dialog per aggiungere o modificare un prodotto
+  /// Dialog per aggiungere o modificare un prodotto
   Widget _dialogProdotto(
       BuildContext context,
       CollectionReference fornitoriRef,
@@ -122,7 +122,7 @@ class GestioneProdottiScreen extends StatelessWidget {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 🔹 Campo testo per il nome
+          // Campo testo per il nome
           TextField(
             decoration: const InputDecoration(labelText: "Nome"),
             controller: TextEditingController(text: nome),
@@ -130,7 +130,7 @@ class GestioneProdottiScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // 🔹 Dropdown fornitori
+          // Dropdown fornitori
           StreamBuilder<QuerySnapshot>(
             stream: fornitoriRef.snapshots(),
             builder: (context, snapshot) {
@@ -138,7 +138,7 @@ class GestioneProdottiScreen extends StatelessWidget {
               final fornitori = snapshot.data!.docs;
 
               return DropdownButton<String>(
-                // 🔹 Preseleziona il fornitore attuale se esiste
+                // Preseleziona il fornitore attuale se esiste
                 value: nuovoFornitoreId.isNotEmpty ? nuovoFornitoreId : null,
                 hint: const Text("Seleziona Fornitore"),
                 isExpanded: true,

@@ -20,7 +20,7 @@ class _StatisticheScreenState extends State<StatisticheScreen> {
       appBar: AppBar(title: const Text("Statistiche")),
       body: Column(
         children: [
-          // 🔹 Pulsanti filtro
+          // Pulsanti filtro
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ToggleButtons(
@@ -51,7 +51,7 @@ class _StatisticheScreenState extends State<StatisticheScreen> {
             ),
           ),
 
-          // 🔹 Contenuto principale
+          // Contenuto principale
           Expanded(
             child: FutureBuilder<QuerySnapshot>(
               future: ordiniRef.get(),
@@ -64,7 +64,7 @@ class _StatisticheScreenState extends State<StatisticheScreen> {
                 final Map<String, int> conteggioPiatti = {};
                 double totaleIncasso = 0;
 
-                // 🔹 Calcolo date filtro
+                // Calcolo date filtro
                 final now = DateTime.now();
                 DateTime? inizioPeriodo;
 
@@ -107,7 +107,7 @@ class _StatisticheScreenState extends State<StatisticheScreen> {
 
                 return Column(
                   children: [
-                    // 🔹 Grafico a barre
+                    // Grafico a barre
                     Expanded(
                       flex: 2,
                       child: Padding(
@@ -153,7 +153,7 @@ class _StatisticheScreenState extends State<StatisticheScreen> {
                       ),
                     ),
 
-                    // 🔹 Lista dei piatti
+                    // Lista dei piatti
                     Expanded(
                       flex: 1,
                       child: ListView(
@@ -173,7 +173,7 @@ class _StatisticheScreenState extends State<StatisticheScreen> {
         ],
       ),
 
-      // 🔹 Totale incasso spostato sopra i tasti del telefono
+      // Totale incasso spostato sopra i tasti del telefono
       bottomNavigationBar: SafeArea(
         child: Container(
           color: Colors.white,

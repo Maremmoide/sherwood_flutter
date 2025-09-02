@@ -15,7 +15,7 @@ class OrdiniScreen extends StatelessWidget {
       appBar: AppBar(title: Text("Tavolo $tavoloNumero - Ordini")),
       body: Column(
         children: [
-          // 🔹 Lista categorie lette da Firestore
+          // Lista categorie lette da Firestore
           Expanded(
             flex: 1,
             child: StreamBuilder<QuerySnapshot>(
@@ -62,7 +62,7 @@ class OrdiniScreen extends StatelessWidget {
 
           const Divider(height: 1),
 
-          // 🔹 Ordini del tavolo in tempo reale
+          // Ordini del tavolo in tempo reale
           Expanded(
             flex: 1,
             child: StreamBuilder<DocumentSnapshot>(

@@ -74,7 +74,7 @@ class GestioneTavoliScreen extends StatelessWidget {
         },
       ),
 
-      // 🔽 FAB per aggiungere tavolo
+      // FAB per aggiungere tavolo
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text("Aggiungi Tavolo"),
